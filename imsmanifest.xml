@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<manifest identifier="UDEC_ODC_CONFIANZA_IA" version="1.0"
+  xmlns="http://www.imsproject.org/xsd/imscp_rootv1p1p2"
+  xmlns:adlcp="http://www.adlnet.org/xsd/adlcp_rootv1p2"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.imsproject.org/xsd/imscp_rootv1p1p2 imscp_rootv1p1p2.xsd http://www.imsglobal.org/xsd/imsmd_rootv1p2p1 imsmd_rootv1p2p1.xsd http://www.adlnet.org/xsd/adlcp_rootv1p2 adlcp_rootv1p2.xsd">
+  <metadata>
+    <schema>ADL SCORM</schema>
+    <schemaversion>1.2</schemaversion>
+  </metadata>
+  <organizations default="ORG_UDEC">
+    <organization identifier="ORG_UDEC">
+      <title>¿Se puede confiar en la IA? Indicadores para evaluar la confianza en modelos de aprendizaje supervisado explicables</title>
+      <item identifier="ITEM_ODC" identifierref="RES_ODC" isvisible="true">
+        <title>¿Se puede confiar en la IA? (ODC · UdeC)</title>
+        <adlcp:masteryscore>70</adlcp:masteryscore>
+      </item>
+    </organization>
+  </organizations>
+  <resources>
+    <resource identifier="RES_ODC" type="webcontent" adlcp:scormtype="sco" href="index.html">
+      <file href="assets/audio/p01.mp3"/>
+      <file href="assets/audio/p02.mp3"/>
+      <file href="assets/audio/p03.mp3"/>
+      <file href="assets/audio/p04.mp3"/>
+      <file href="assets/audio/p05.mp3"/>
+      <file href="assets/audio/p06.mp3"/>
+      <file href="assets/audio/p07.mp3"/>
+      <file href="assets/audio/p08.mp3"/>
+      <file href="assets/audio/p09.mp3"/>
+      <file href="assets/audio/p10.mp3"/>
+      <file href="assets/audio/p11.mp3"/>
+      <file href="assets/audio/p12.mp3"/>
+      <file href="assets/audio/p13.mp3"/>
+      <file href="assets/audio/p14.mp3"/>
+      <file href="assets/audio/p15.mp3"/>
+      <file href="assets/audio/p16.mp3"/>
+      <file href="assets/docs/lista_verificacion.pdf"/>
+      <file href="assets/img/cc-by-sa.png"/>
+      <file href="assets/img/persona_duda.svg"/>
+      <file href="assets/img/prisma.png"/>
+      <file href="assets/img/vera_blink.svg"/>
+      <file href="assets/img/vera_rest.svg"/>
+      <file href="assets/img/vera_talk.svg"/>
+      <file href="css/styles.css"/>
+      <file href="index.html"/>
+      <file href="js/app.js"/>
+      <file href="js/content.js"/>
+      <file href="js/scorm.js"/>
+    </resource>
+  </resources>
+</manifest>
