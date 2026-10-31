@@ -109,3 +109,4 @@ table.cats td:first-child{font-weight:700;white-space:nowrap;color:var(--navy)}
 .qnav span.bad{background:var(--red-l);border-color:var(--red)}
 select{font:inherit;font-size:11.5px;padding:3px;border:1.5px solid var(--line);border-radius:5px;max-width:100%}
 #main:focus{outline:none}
+#stage{flex:0 0 auto}
