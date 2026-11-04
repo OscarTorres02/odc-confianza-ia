@@ -12,7 +12,7 @@
 <div id="stage-wrap">
   <div id="stage" role="application" aria-label="Objeto Digital de Conocimiento">
     <header class="top">
-      <span class="logo" aria-label="Universidad de Cundinamarca">UdeC</span>
+      <span class="brand"><img src="assets/img/udec_logo.png" alt="Universidad de Cundinamarca, acreditación institucional de alta calidad" width="215" height="44"></span>
       <span class="tt"><b>¿Se puede confiar en la IA?</b> · ODC</span>
       <span class="prog" id="prog" aria-live="polite">Pantalla 01 / 18</span>
       <span class="score-pill" id="scorePill" title="Puntaje acumulado">0 / 100</span>
@@ -25,13 +25,9 @@
     <aside class="av" id="avatar" aria-label="Avatar guía Vera">
       <div class="avcard">
         <div class="avname">Vera · guía</div>
-        <div class="avimg">
-          <img id="veraRest" src="assets/img/vera_rest.svg" alt="Vera, avatar ilustrado que guía el recorrido">
-          <img id="veraTalk" src="assets/img/vera_talk.svg" alt="" aria-hidden="true" class="hide">
-          <img id="veraBlink" src="assets/img/vera_blink.svg" alt="" aria-hidden="true" class="hide">
-        </div>
+        <video id="audio" class="avvid" playsinline preload="auto" poster="assets/img/vera3d.jpg" aria-label="Vera, avatar guía, explica el contenido de la pantalla"></video>
         <div class="transcript hide" id="transcript" tabindex="0" aria-label="Transcripción del audio"></div>
-        <div class="avtag">Avatar Open Peeps (Pablo Stanley, CC0) · voz Piper «daniela» (CC BY-SA 4.0)</div>
+        <div class="avtag">Avatar «Vera» generado con IA y animado con SadTalker · voz Piper «daniela» (CC BY-SA 4.0)</div>
       </div>
       <div class="ctrl">
         <button id="btnPlay" aria-label="Reproducir audio">▶</button>
@@ -39,7 +35,6 @@
         <label class="vol"><span aria-hidden="true">🔊</span><input type="range" id="vol" min="0" max="1" step="0.05" value="0.9" aria-label="Volumen"></label>
         <button id="btnCC" aria-label="Mostrar transcripción" aria-pressed="false">CC</button>
       </div>
-      <audio id="audio" preload="auto"></audio>
     </aside>
 
     <nav class="nav" aria-label="Navegación">
@@ -56,10 +51,13 @@
         <div id="modalBody"></div>
       </div>
     </div>
+    <svg id="cueLayer" class="cue-layer" aria-hidden="true"><defs><marker id="cueHead" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#DAAA00"/></marker></defs><path id="cuePath" d="" /></svg>
   </div>
 </div>
 <script src="js/scorm.js"></script>
 <script src="js/content.js"></script>
+<script src="js/icons.js"></script>
+<script src="js/ilustraciones.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

@@ -15,4 +15,4 @@ Objeto Digital de Conocimiento (ODC) · Especialización en Analítica y Ciencia
 
 ## Licencia
 Creative Commons Atribución-CompartirIgual 4.0 Internacional (CC BY-SA 4.0).
-Avatar: Open Peeps de Pablo Stanley (CC0). Voz sintética: Piper TTS, voz «daniela» (OpenSLR 61, CC BY-SA 4.0).
+Avatar «Vera» generado con IA y animado con SadTalker. Voz sintética: Piper TTS, voz «daniela» (OpenSLR 61, CC BY-SA 4.0).

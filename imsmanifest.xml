@@ -19,33 +19,34 @@
   </organizations>
   <resources>
     <resource identifier="RES_ODC" type="webcontent" adlcp:scormtype="sco" href="index.html">
-      <file href="assets/audio/p01.mp3"/>
-      <file href="assets/audio/p02.mp3"/>
-      <file href="assets/audio/p03.mp3"/>
-      <file href="assets/audio/p04.mp3"/>
-      <file href="assets/audio/p05.mp3"/>
-      <file href="assets/audio/p06.mp3"/>
-      <file href="assets/audio/p07.mp3"/>
-      <file href="assets/audio/p08.mp3"/>
-      <file href="assets/audio/p09.mp3"/>
-      <file href="assets/audio/p10.mp3"/>
-      <file href="assets/audio/p11.mp3"/>
-      <file href="assets/audio/p12.mp3"/>
-      <file href="assets/audio/p13.mp3"/>
-      <file href="assets/audio/p14.mp3"/>
-      <file href="assets/audio/p15.mp3"/>
-      <file href="assets/audio/p16.mp3"/>
       <file href="assets/docs/lista_verificacion.pdf"/>
       <file href="assets/img/cc-by-sa.png"/>
-      <file href="assets/img/persona_duda.svg"/>
       <file href="assets/img/prisma.png"/>
-      <file href="assets/img/vera_blink.svg"/>
-      <file href="assets/img/vera_rest.svg"/>
-      <file href="assets/img/vera_talk.svg"/>
+      <file href="assets/img/red_datos.svg"/>
+      <file href="assets/img/udec_logo.png"/>
+      <file href="assets/img/vera3d.jpg"/>
+      <file href="assets/video/p01.mp4"/>
+      <file href="assets/video/p02.mp4"/>
+      <file href="assets/video/p03.mp4"/>
+      <file href="assets/video/p04.mp4"/>
+      <file href="assets/video/p05.mp4"/>
+      <file href="assets/video/p06.mp4"/>
+      <file href="assets/video/p07.mp4"/>
+      <file href="assets/video/p08.mp4"/>
+      <file href="assets/video/p09.mp4"/>
+      <file href="assets/video/p10.mp4"/>
+      <file href="assets/video/p11.mp4"/>
+      <file href="assets/video/p12.mp4"/>
+      <file href="assets/video/p13.mp4"/>
+      <file href="assets/video/p14.mp4"/>
+      <file href="assets/video/p15.mp4"/>
+      <file href="assets/video/p16.mp4"/>
       <file href="css/styles.css"/>
       <file href="index.html"/>
       <file href="js/app.js"/>
       <file href="js/content.js"/>
+      <file href="js/icons.js"/>
+      <file href="js/ilustraciones.js"/>
       <file href="js/scorm.js"/>
     </resource>
   </resources>

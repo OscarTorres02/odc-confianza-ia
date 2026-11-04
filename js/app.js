@@ -31,7 +31,17 @@
       if (evalDone()) SCORM.set('cmi.core.lesson_status', total() >= 70 ? 'passed' : 'failed');
       SCORM.commit();
     }
-    $('#scorePill').textContent = (Math.round(total() * 10) / 10).toString().replace('.', ',') + ' / 100';
+    showScore(total());
+  }
+  var shownScore = null, scoreRaf = null;
+  function fmtScore(v) { return (Math.round(v * 10) / 10).toString().replace('.', ',') + ' / 100'; }
+  function showScore(v) {
+    var pill = $('#scorePill'), reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (shownScore === null || reduce || v <= shownScore) { shownScore = v; pill.textContent = fmtScore(v); return; }
+    var from = shownScore, t0 = performance.now(); shownScore = v;
+    pill.classList.remove('bump'); void pill.offsetWidth; pill.classList.add('bump');
+    cancelAnimationFrame(scoreRaf);
+    (function step(t) { var k = Math.min(1, (t - t0) / 700); k = 1 - Math.pow(1 - k, 3); pill.textContent = fmtScore(from + (v - from) * k); if (k < 1) scoreRaf = requestAnimationFrame(step); })(t0);
   }
   function record(key, frac) { if (state.act[key] === undefined) { state.act[key] = frac; save(); } }
 
@@ -55,7 +65,7 @@
     diagrama: ['Diagrama de flujo PRISMA', '<img src="assets/img/prisma.png" alt="Diagrama de flujo PRISMA: 50 registros identificados en Scopus, 50 cribados, 50 evaluados, 20 excluidos con razones, 30 incluidos en la revisión y 20 seleccionados para el ODC" style="width:100%;max-width:760px"><p style="font-size:11px;color:#5A6B7C">Elaboración propia (CC BY-SA 4.0), con base en el método PRISMA (Page et al., 2021).</p>'],
     automatizacion: ['Sesgo de automatización', '<p>Tendencia a aceptar lo que dice un sistema automático aunque haya señales de que se equivoca. Es una de las causas de la sobreconfianza (Humer et al., 2024).</p>']
   };
-  var HELP = '<ol><li><b>Navegar:</b> usa las flechas «Anterior» y «Siguiente», las teclas ← y → del teclado o el botón ☰ Menú para ir a cualquier sección.</li><li><b>Avatar Vera:</b> ▶ reproduce o pausa el audio, ↺ lo reinicia, la barra ajusta el volumen y CC muestra la transcripción.</li><li><b>«+info»:</b> abre ventanas con definiciones, datos y enlaces. En algunas tarjetas, pasa el cursor (o toca) para ver más.</li><li><b>Miniactividades:</b> haz clic en una ficha y luego en su lugar (o arrástrala). Pulsa «Comprobar» para ver la retroalimentación. Se califica el primer intento; puedes reintentar para practicar.</li><li><b>Nota:</b> 8 miniactividades (6,25 puntos cada una = 50) + evaluación final de 8 preguntas (6,25 cada una = 50) = 100 puntos. Se aprueba con 70.</li></ol>';
+  var HELP = '<ol><li><b>Navegar:</b> usa las flechas «Anterior» y «Siguiente», las teclas ← y → del teclado o el botón ☰ Menú para ir a cualquier sección.</li><li><b>Avatar Vera:</b> ▶ reproduce o pausa a Vera, ↺ la reinicia, la barra ajusta el volumen y CC muestra la transcripción. Cuando Vera nombra algo, una flecha lo señala y el elemento se resalta.</li><li><b>«+info»:</b> abre ventanas con definiciones, datos y enlaces. En algunas tarjetas, pasa el cursor (o toca) para ver más.</li><li><b>Miniactividades:</b> haz clic en una ficha y luego en su lugar (o arrástrala). Pulsa «Comprobar» para ver la retroalimentación. Se califica el primer intento; puedes reintentar para practicar.</li><li><b>Nota:</b> 8 miniactividades (6,25 puntos cada una = 50) + evaluación final de 8 preguntas (6,25 cada una = 50) = 100 puntos. Se aprueba con 70.</li></ol>';
 
   /* ---------------- generic placement activity ---------------- */
   // cfg: {key, items:[{t, to, fb}], targets:[{id,label}], single:bool, zoneStyle}
@@ -158,12 +168,14 @@
   var CAT_TITLE = {"Técnicos de las explicaciones":"Indicadores técnicos de las explicaciones","Cognitivos y perceptivos":"Indicadores cognitivos y perceptivos","Diseño del sistema XAI":"Indicadores de diseño del sistema XAI","Éticos y de gobernanza":"Indicadores éticos y de gobernanza","Organizacionales y de adopción":"Indicadores organizacionales y de adopción","Medición de la confianza":"Indicadores para medir la confianza"};
   var CAT_SHORT = {"Técnicos de las explicaciones":"⚙ Técnicos (5)","Cognitivos y perceptivos":"💡 Cognitivos (5)","Diseño del sistema XAI":"✎ Diseño (5)","Éticos y de gobernanza":"⚖ Éticos y gobernanza (5)","Organizacionales y de adopción":"🏢 Organizacionales (5)","Medición de la confianza":"📏 Medición (6)"};
   function catScreen(n, mod, cat, part, actHtml) {
-    var cards = D.inds.filter(function (i) { return i[0] === cat; }).map(function (i) {
-      return '<article class="card icard"><h3>' + i[1] + '</h3><div class="d"><b>¿Qué evalúa?</b> ' + cap(i[2]) + '</div><div class="e"><b>Ejemplo:</b> ' + cap(i[3]) + '</div><div class="c">(' + i[4] + ')</div></article>';
+    var list = D.inds.filter(function (i) { return i[0] === cat; });
+    var cards = list.map(function (i, k) {
+      var span = list.length === 5 && k >= 3 ? ' wide' : '';
+      return '<article class="card icard' + span + '" data-cue="ind:' + i[1] + '"><div class="ihead">' + ODC_ICON(i[1]) + '<h3>' + i[1] + '</h3></div><div class="d"><b>¿Qué evalúa?</b> ' + cap(i[2]) + '</div><div class="e"><b>Ejemplo:</b> ' + cap(i[3]) + '</div><div class="c">(' + i[4] + ')</div></article>';
     }).join('');
     return '<div class="kick">' + mod + ' · Pantalla ' + pad(n) + ' ' + part + '</div><h1>' + CAT_TITLE[cat] + '</h1>' +
-      '<div class="card" style="padding:6px 12px;margin-bottom:7px;font-size:11.5px;background:var(--teal-l)"><b>' + cat + '.</b> ' + D.catdesc[cat] + '</div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px">' + cards + '</div>' + (actHtml ? '<div class="card" id="actbox" style="margin-top:7px;padding:7px 12px">' + actHtml + '</div>' : '');
+      '<div class="card catdesc" data-cue="desc"><b>' + cat + '.</b> ' + D.catdesc[cat] + '</div>' +
+      '<div class="icgrid grow" data-cue="grid">' + cards + '</div>' + (actHtml ? '<div class="card" id="actbox" data-cue="act">' + actHtml + '</div>' : '');
   }
   function pad(n) { return (n < 10 ? '0' : '') + n; }
 
@@ -172,20 +184,20 @@
   S[1] = { html: function () {
     return '<div style="height:100%;display:flex;flex-direction:column;justify-content:center;gap:14px;padding-right:20px">' +
       '<div class="kick">ODC · Universidad de Cundinamarca</div>' +
-      '<div style="font-size:50px;font-weight:800;line-height:1.05;color:var(--navy)">¿Se puede confiar<br>en la <span style="color:var(--teal)">IA</span>?</div>' +
-      '<div class="p" style="font-size:17px;max-width:720px">Indicadores para evaluar la confianza en modelos de aprendizaje supervisado explicables para decisiones organizacionales</div>' +
+      '<div data-cue="title" style="font-size:50px;font-weight:800;line-height:1.05;color:var(--navy)">¿Se puede confiar<br>en la <span style="color:var(--teal)">IA</span>?</div>' +
+      '<div class="p" data-cue="sub" style="font-size:17px;max-width:720px">Indicadores para evaluar la confianza en modelos de aprendizaje supervisado explicables para decisiones organizacionales</div>' +
       '<div><span class="chip" style="border-style:solid;background:#fff">Especialización en Analítica y Ciencia de Datos</span><span class="chip" style="border-style:solid;background:#fff">Versión 1.0 · 2026</span><span class="chip" style="border-style:solid;background:#fff">18 pantallas interactivas</span></div>' +
       '<div class="p"><b>Oscar Manuel Torres Maldonado · María Lucía Torres Maldonado</b><br><span style="color:var(--muted)">Tutor: Darwin Andrés Díaz Gómez</span></div>' +
-      '<div class="row"><button class="btn" id="go" style="font-size:15px;padding:11px 20px">🚀 Iniciar recorrido</button><button class="btn2" id="help2" style="padding:10px 16px">? Ayuda</button></div></div>';
+      '<div class="row"><button class="btn" id="go" data-cue="go" style="font-size:15px;padding:11px 20px">🚀 Iniciar recorrido</button><button class="btn2" id="help2" style="padding:10px 16px">? Ayuda</button></div></div>';
   }, init: function () { $('#go').onclick = function () { go(2); }; $('#help2').onclick = function () { modal('Ayuda', HELP); }; } };
 
   S[2] = { html: function () {
     return '<div class="kick">Entrada · Pantalla 02</div><h1>Resultado de aprendizaje y población objetivo</h1>' +
       '<div style="display:grid;grid-template-columns:1.35fr 1fr;gap:12px">' +
-      '<div class="card hl"><div class="act">🎯 Resultado Esperado de Aprendizaje</div><div class="p"><b>Comprender</b> los indicadores utilizados para evaluar la confianza de los usuarios internos en modelos de aprendizaje supervisado explicables, <b>a partir del aprendizaje basado en casos</b>, <b>para la toma de decisiones en organizaciones empresariales de América Latina.</b></div></div>' +
-      '<div class="card"><div class="act">👥 Población objetivo</div><div class="p">Creadores de oportunidades de la Especialización en Analítica y Ciencia de Datos (UdeC) que cursan o cursaron el CADI Aplicación de Machine Learning y conocen los fundamentos del aprendizaje supervisado.</div></div></div>' +
-      '<div class="card" id="rea" style="margin-top:12px"><div class="act">🧩 Miniactividad · Arma tu REA (sin nota)</div><div class="pool" style="min-height:34px"></div>' +
-      '<div class="row" style="margin-top:4px">' + ['Verbo', 'Objeto', 'Estrategia', 'Contexto'].map(function (t) { return '<div class="slot" data-target="' + t + '" style="min-width:150px;min-height:40px"><div style="font-size:10px">' + t + '</div><div class="zin"></div></div>'; }).join('') + actButtons() + '</div><div class="fbbox"></div></div>';
+      '<div class="card hl" data-cue="rea"><div class="act">🎯 Resultado Esperado de Aprendizaje</div><div class="p"><b>Comprender</b> los indicadores utilizados para evaluar la confianza de los usuarios internos en modelos de aprendizaje supervisado explicables, <b>a partir del aprendizaje basado en casos</b>, <b>para la toma de decisiones en organizaciones empresariales de América Latina.</b></div></div>' +
+      '<div class="card" data-cue="pob"><div class="act">👥 Población objetivo</div><div class="p">Creadores de oportunidades de la Especialización en Analítica y Ciencia de Datos (UdeC) que cursan o cursaron el CADI Aplicación de Machine Learning y conocen los fundamentos del aprendizaje supervisado.</div></div></div>' +
+      '<div class="card grow" id="rea" data-cue="act" style="margin-top:12px"><div class="act">🧩 Miniactividad · Arma tu REA (sin nota)</div><div class="pool" style="min-height:34px"></div>' +
+      '<div class="row" data-cue="slots" style="margin-top:4px">' + ['Verbo', 'Objeto', 'Estrategia', 'Contexto'].map(function (t) { return '<div class="slot" data-target="' + t + '" style="min-width:150px;min-height:40px"><div style="font-size:10px">' + t + '</div><div class="zin"></div></div>'; }).join('') + actButtons() + '</div><div class="fbbox"></div></div>';
   }, init: function () {
     placement($('#rea'), { single: true, okMsg: '¡Correcto! Un REA dice qué lograrás (verbo), sobre qué (objeto), cómo lo aprenderás (estrategia) y dónde lo aplicarás (contexto).', items: [
       { t: 'Comprender', to: 'Verbo', fb: 'es la acción que lograrás: el verbo.' },
@@ -198,19 +210,19 @@
   S[3] = { html: function () {
     var cells = MENU.map(function (m) {
       var seen = state.visited.indexOf(m[0]) >= 0 || (m[0] === 8 && state.visited.indexOf(9) >= 0);
-      return '<button class="card" data-go="' + m[0] + '" title="' + m[3] + '"><div style="font-size:19px">' + m[1] + '</div><div style="font-size:12.5px;font-weight:700;margin-top:3px">' + m[2] + '</div><div style="font-size:10.5px;color:var(--muted)">' + m[3] + '</div>' + (seen ? '<div style="font-size:11px;color:var(--green)">✓ visitado</div>' : '') + '</button>';
+      return '<button class="card" data-go="' + m[0] + '" data-cue="g' + m[0] + '" title="' + m[3] + '"><div style="font-size:19px">' + m[1] + '</div><div style="font-size:12.5px;font-weight:700;margin-top:3px;color:var(--navy)">' + m[2] + '</div><div style="font-size:10.5px;color:var(--muted)">' + m[3] + '</div>' + (seen ? '<div style="font-size:11px;color:var(--green)">✓ visitado</div>' : '') + '</button>';
     }).join('');
-    return '<div class="kick">Pantalla 03</div><h1>Ruta de aprendizaje</h1><div class="p" style="margin-bottom:8px">Sigue el orden o salta al tema que quieras. Puedes volver aquí desde ☰ Menú. Los módulos 5, 6 y 7 tienen dos pantallas, una por categoría de indicadores.</div><div class="menu-grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:9px">' + cells + '</div>';
+    return '<div class="kick">Pantalla 03</div><h1>Ruta de aprendizaje</h1><div class="p" style="margin-bottom:8px">Sigue el orden o salta al tema que quieras. Puedes volver aquí desde ☰ Menú. Los módulos 5, 6 y 7 tienen dos pantallas, una por categoría de indicadores.</div><div class="menu-grid" data-cue="grid" style="display:grid;grid-template-columns:repeat(5,1fr);gap:9px">' + cells + '</div>';
   }, init: function () { $$('[data-go]').forEach(function (b) { b.onclick = function () { go(+b.dataset.go); }; }); } };
 
   S[4] = { html: function () {
-    function st(n, t, w) { return '<div class="card stat' + (w ? ' warn' : '') + '"><b>' + n + '</b><span>' + t + '</span></div>'; }
+    function st(n, t, w, c) { return '<div class="card stat' + (w ? ' warn' : '') + '" data-cue="' + c + '"><b>' + n + '</b><span>' + t + '</span></div>'; }
     return '<div class="kick">Módulo 1 · Pantalla 04</div><h1>La IA decide, pero la confianza está en duda</h1>' +
-      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px">' + st('46%', 'dispuestos a confiar en la IA (47 países)') + st('66%', 'de empleados usa la IA sin verificar', 1) + st('56%', 'cometió errores por culpa de la IA', 1) + st('55% · 51%', 'confían en Brasil y México') + '</div>' +
-      '<div style="font-size:10.5px;color:var(--muted);margin:4px 0 7px">Fuente: Gillespie et al. (2025), Universidad de Melbourne y KPMG (más de 48 000 personas).</div>' +
-      '<div class="p" style="font-size:12.5px"><b>Propósito:</b> reconocer por qué la confianza en la IA es un problema real en las organizaciones. Pocos dicen confiar, pero muchos usan la IA sin cuestionarla. En la empresa decide un <b>usuario interno</b> <button class="plus" data-info="usuario">+info</button>: si confía de más, repite los errores del modelo; si confía de menos, lo ignora y la inversión se pierde (K et al., 2026; Cao et al., 2026).</div>' +
-      '<div class="card" style="margin-top:9px"><div class="act">✔✘ Miniactividad · Verdadero o falso (6,25 puntos)</div><div id="vf"></div></div>' +
-      '<div class="ph" style="height:118px;margin-top:9px"><img src="assets/img/persona_duda.svg" alt="Persona de pie, pensativa, frente a una recomendación de IA" style="height:110px"><div class="card" style="font-size:12px;text-align:center"><div style="font-size:10px;color:var(--muted)">Recomendación del modelo</div><b style="color:var(--red)">RECHAZAR</b> <span style="font-size:22px">❓</span></div><div style="font-size:11.5px;color:var(--muted)">🌎 América Latina<br>Brasil 55% · México 51%</div></div>';
+      '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:9px">' + st('46%', 'dispuestos a confiar en la IA (47 países)', 0, 's1') + st('66%', 'de empleados usa la IA sin verificar', 1, 's2') + st('56%', 'cometió errores por culpa de la IA', 1, 's3') + st('55% · 51%', 'confían en Brasil y México', 0, 's4') + '</div>' +
+      '<div data-cue="fuente" style="font-size:10.5px;color:var(--muted);margin:4px 0 7px">Fuente: Gillespie et al. (2025), Universidad de Melbourne y KPMG (más de 48 000 personas).</div>' +
+      '<div class="p" data-cue="prop" style="font-size:12.5px"><b>Propósito:</b> reconocer por qué la confianza en la IA es un problema real en las organizaciones. Pocos dicen confiar, pero muchos usan la IA sin cuestionarla. En la empresa decide un <b>usuario interno</b> <button class="plus" data-info="usuario" data-cue="info">+info</button>: si confía de más, repite los errores del modelo; si confía de menos, lo ignora y la inversión se pierde (K et al., 2026; Cao et al., 2026).</div>' +
+      '<div class="card" data-cue="act" style="margin-top:9px"><div class="act">✔✘ Miniactividad · Verdadero o falso (6,25 puntos)</div><div id="vf"></div></div>' +
+      '<div class="ph escena grow" role="img" aria-label="Ilustración: una analista, pensativa, frente a un monitor con la recomendación del modelo de rechazar; a la derecha, mapa de América Latina con Brasil y México resaltados"><div class="esc-a">' + ODC_SVG.analista.replace('</svg>', '<foreignObject x="163" y="40" width="152" height="74"><div xmlns="http://www.w3.org/1999/xhtml" class="card mon"><div style="font-size:10px;color:var(--muted)">Recomendación del modelo</div><b style="color:var(--red)">RECHAZAR</b> <span style="font-size:22px">❓</span></div></foreignObject></svg>') + '</div><div class="esc-m">' + ODC_SVG.mapa + '<div class="maplbl">🌎 América Latina<br>Brasil 55% · México 51%</div></div></div>';
   }, init: function () {
     mcSeq($('#vf'), 'm1', [
       { q: 'Menos de la mitad de las personas en el mundo está dispuesta a confiar en la IA.', opts: [{ t: 'V', ok: 1, fb: 'Verdadero: el 46% (Gillespie et al., 2025).' }, { t: 'F', ok: 0, fb: 'Es verdadero: solo el 46% está dispuesto a confiar (Gillespie et al., 2025).' }] },
@@ -222,11 +234,11 @@
 
   S[5] = { html: function () {
     return '<div class="kick">Módulo 2 · Pantalla 05</div><h1>Del machine learning al modelo explicable</h1>' +
-      '<div class="card"><div class="act">① ¿Qué es el machine learning?</div><div class="p" style="font-size:12px">Sistemas que aprenden patrones a partir de datos para predecir o decidir, sin programar cada regla a mano (Sarker, 2021).</div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px;font-size:11px"><div class="card hl" style="padding:5px 8px"><b>Supervisado ✔</b><br>Aprende de datos etiquetados. Ej.: predecir si un cliente pagará.</div><div class="card" style="padding:5px 8px"><b>No supervisado</b><br>Agrupa datos sin etiquetas. Ej.: segmentar clientes.</div><div class="card" style="padding:5px 8px"><b>Por refuerzo</b><br>Aprende por recompensas. Ej.: ajustar precios.</div></div></div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div class="card"><div class="act">② Supervisado = caja negra</div><div class="p" style="font-size:11.5px">«Rechazar crédito». Un modelo preciso que no muestra por qué predice.</div></div>' +
-      '<div class="card hl"><div class="act">③ + capa XAI = explicable</div><div class="p" style="font-size:11px">Ingresos ▮▮▮▮ − · Historial ▮▮▮ + · Deuda ▮▮ − · explicación local o global (Lin et al., 2026; Li et al., 2024)</div><button class="plus" data-info="shap">+info SHAP</button> <button class="plus" data-info="lime">+info LIME</button></div></div>' +
-      '<div class="card" id="cls" style="margin-top:8px"><div class="act">🗂 Miniactividad · Caja negra o explicable (6,25 puntos)</div>' +
+      '<div class="card" data-cue="ml"><div class="act">① ¿Qué es el machine learning?</div><div class="p" style="font-size:12px">Sistemas que aprenden patrones a partir de datos para predecir o decidir, sin programar cada regla a mano (Sarker, 2021).</div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-top:6px;font-size:11px"><div class="card hl" data-cue="sup" style="padding:5px 8px"><b>Supervisado ✔</b><br>Aprende de datos etiquetados. Ej.: predecir si un cliente pagará.</div><div class="card" data-cue="nosup" style="padding:5px 8px"><b>No supervisado</b><br>Agrupa datos sin etiquetas. Ej.: segmentar clientes.</div><div class="card" data-cue="ref" style="padding:5px 8px"><b>Por refuerzo</b><br>Aprende por recompensas. Ej.: ajustar precios.</div></div></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"><div class="card" data-cue="cn"><div class="act">② Supervisado = caja negra</div><div class="p" style="font-size:11.5px">«Rechazar crédito». Un modelo preciso que no muestra por qué predice.</div></div>' +
+      '<div class="card hl" data-cue="xai"><div class="act">③ + capa XAI = explicable</div><div class="p" style="font-size:11px">Ingresos ▮▮▮▮ − · Historial ▮▮▮ + · Deuda ▮▮ − · explicación local o global (Lin et al., 2026; Li et al., 2024)</div><button class="plus" data-info="shap" data-cue="shap">+info SHAP</button> <button class="plus" data-info="lime">+info LIME</button></div></div>' +
+      '<div class="card" id="cls" data-cue="act" style="margin-top:8px"><div class="act">🗂 Miniactividad · Caja negra o explicable (6,25 puntos)</div>' +
       '<div style="display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:8px;font-size:11px"><div class="pool"></div><div class="zone" data-target="cn"><div class="zt">⬛ Caja negra</div><div class="zin"></div></div><div class="zone" data-target="ex"><div class="zt">🔍 Explicable</div><div class="zin"></div></div></div><div class="row">' + actButtons() + '</div><div class="fbbox"></div></div>';
   }, init: function () {
     placement($('#cls'), { key: 'm2', items: [
@@ -238,15 +250,15 @@
   } };
 
   S[6] = { html: function () {
-    function hv(t, d, more, hl) { return '<div class="card tip' + (hl ? ' hl' : '') + '" tabindex="0"><div class="act">' + t + '</div><div class="p" style="font-size:11.5px">' + d + '</div><div style="font-size:10px;color:var(--muted);margin-top:3px">ⓘ pasa el cursor para ver más</div><div class="tiptext">' + more + '</div></div>'; }
+    function hv(t, d, more, hl) { return '<div class="card tip' + (hl ? ' hl' : '') + '" data-cue="' + t.toLowerCase().slice(0, 3) + '" tabindex="0"><div class="act">' + t + '</div><div class="p" style="font-size:11.5px">' + d + '</div><div style="font-size:10px;color:var(--muted);margin-top:3px">ⓘ pasa el cursor para ver más</div><div class="tiptext">' + more + '</div></div>'; }
     return '<div class="kick">Módulo 3 · Pantalla 06</div><h1>Confianza calibrada: confiar lo justo</h1>' +
-      '<div class="card" style="margin-bottom:8px"><div class="p" style="font-size:12px"><b>Confianza:</b> disposición a apoyarse en un sistema cuando hay incertidumbre y algo en juego (Lee y See, 2004). Lo que se evalúa es si es <b>adecuada</b>. Quien más sabe del tema suele confiar menos y decidir mejor: <b>escepticismo calibrado</b> (Nunez et al., 2026; Dikmen y Burns, 2022). <button class="plus" data-info="automatizacion">+info</button></div></div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">' +
+      '<div class="card" data-cue="def" style="margin-bottom:8px"><div class="p" style="font-size:12px"><b>Confianza:</b> disposición a apoyarse en un sistema cuando hay incertidumbre y algo en juego (Lee y See, 2004). Lo que se evalúa es si es <b>adecuada</b>. Quien más sabe del tema suele confiar menos y decidir mejor: <b>escepticismo calibrado</b> (Nunez et al., 2026; Dikmen y Burns, 2022). <button class="plus" data-info="automatizacion" data-cue="info">+info</button></div></div>' +
+      '<div data-cue="trio" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">' +
       hv('Subconfianza', 'Ignora el modelo aunque acierte.', 'Suele aparecer cuando el usuario no entiende el modelo o desconfía de la tecnología; se pierde la inversión.') +
       hv('Calibrada', 'Confía tanto como el modelo lo merece.', 'Se logra cuando el usuario conoce el desempeño del modelo y entiende sus explicaciones (Naiseh et al., 2021, 2023).', 1) +
       hv('Sobreconfianza', 'Acepta los errores del modelo.', 'Las explicaciones «tranquilizadoras» la aumentan y el usuario repite los errores del modelo: dependencia excesiva (Humer et al., 2024).') + '</div>' +
-      '<div class="card" style="margin-top:8px;background:var(--amber-l)"><div class="act">💡 Ejemplo: la app de navegación</div><div class="p" style="font-size:11.5px">Si sigues la ruta aunque te mande a una calle cerrada → sobreconfianza. Si nunca la usas aunque casi siempre acierta → subconfianza. Si la sigues y la cuestionas cuando ves algo raro → calibrada.</div></div>' +
-      '<div class="card" id="term" style="margin-top:8px"><div class="act">🌡 Miniactividad · El termómetro de la confianza (6,25 puntos)</div><div class="pool"></div>' +
+      '<div class="card" data-cue="ej" style="margin-top:8px;background:var(--amber-l)"><div class="act">💡 Ejemplo: la app de navegación</div><div class="p" style="font-size:11.5px">Si sigues la ruta aunque te mande a una calle cerrada → sobreconfianza. Si nunca la usas aunque casi siempre acierta → subconfianza. Si la sigues y la cuestionas cuando ves algo raro → calibrada.</div></div>' +
+      '<div class="card" id="term" data-cue="act" style="margin-top:8px"><div class="act">🌡 Miniactividad · El termómetro de la confianza (6,25 puntos)</div><div class="pool"></div>' +
       '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:4px"><div class="zone" data-target="sub"><div class="zt">Subconfianza</div><div class="zin"></div></div><div class="zone" data-target="cal"><div class="zt">Calibrada</div><div class="zin"></div></div><div class="zone" data-target="sob"><div class="zt">Sobreconfianza</div><div class="zin"></div></div></div><div class="row">' + actButtons() + '</div><div class="fbbox"></div></div>';
   }, init: function () {
     placement($('#term'), { key: 'm3', items: [
@@ -259,11 +271,11 @@
   S[7] = { html: function () {
     var rows = CATS.map(function (c) { return '<tr><td>' + CAT_SHORT[c] + '</td><td>' + D.inds.filter(function (i) { return i[0] === c; }).map(function (i) { return i[1]; }).join(' · ') + '</td></tr>'; }).join('');
     return '<div class="kick">Módulo 4 · Pantalla 07</div><h1>La evidencia: revisión sistemática con PRISMA</h1>' +
-      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="card" style="font-family:Consolas,monospace;font-size:10px;line-height:1.3">Scopus · TITLE-ABS-KEY((trust* W/10 (explainab* OR XAI …)) … 2020–2026 · acceso abierto <button class="plus" data-info="ecuacion">ver ecuación completa</button></div>' +
-      '<div class="p" style="font-size:11.5px"><b>Propósito:</b> conocer de dónde salen los indicadores y cuáles son. 50 identificados → 30 en la matriz → <b>20 seleccionados</b> <button class="plus" data-info="prisma">+info PRISMA</button> <button class="plus" data-info="diagrama">ver diagrama</button></div></div>' +
-      '<div class="act" style="margin-top:7px">Resultado: 31 indicadores en 6 categorías · se desarrollan en M5–M7</div><table class="cats">' + rows + '</table>' +
+      '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div class="card" data-cue="scopus" style="font-family:Consolas,monospace;font-size:10px;line-height:1.3">Scopus · TITLE-ABS-KEY((trust* W/10 (explainab* OR XAI …)) … 2020–2026 · acceso abierto <button class="plus" data-info="ecuacion">ver ecuación completa</button></div>' +
+      '<div class="p" style="font-size:11.5px"><b>Propósito:</b> conocer de dónde salen los indicadores y cuáles son. 50 identificados → 30 en la matriz → <b>20 seleccionados</b> <button class="plus" data-info="prisma" data-cue="prisma">+info PRISMA</button> <button class="plus" data-info="diagrama" data-cue="diag">ver diagrama</button></div></div>' +
+      '<div class="act" style="margin-top:7px">Resultado: 31 indicadores en 6 categorías · se desarrollan en M5–M7</div><table class="cats" data-cue="tabla">' + rows + '</table>' +
       '<div class="p" style="font-size:10.5px;color:var(--muted);margin-top:4px">La evidencia específica de América Latina es escasa; se usan estudios internacionales aplicables a la región.</div>' +
-      '<div class="card" id="ord" style="margin-top:6px;padding:6px 12px"><div class="act">↕ Miniactividad · Ordena el proceso PRISMA (6,25 puntos)</div><div class="row"><div class="pool"></div> → ' + [1, 2, 3, 4].map(function (n) { return '<div class="slot" data-target="' + n + '" style="min-width:105px;min-height:30px"><div style="font-size:10px">' + n + '</div><div class="zin"></div></div>'; }).join('') + actButtons() + '</div><div class="fbbox"></div></div>';
+      '<div class="card" id="ord" data-cue="act" style="margin-top:6px;padding:6px 12px"><div class="act">↕ Miniactividad · Ordena el proceso PRISMA (6,25 puntos)</div><div class="row"><div class="pool"></div> → ' + [1, 2, 3, 4].map(function (n) { return '<div class="slot" data-target="' + n + '" style="min-width:84px;min-height:30px"><div style="font-size:10px">' + n + '</div><div class="zin"></div></div>'; }).join('') + actButtons() + '</div><div class="fbbox"></div></div>';
   }, init: function () {
     placement($('#ord'), { key: 'm4', single: true, okMsg: '¡Correcto! Así se garantiza que la selección sea transparente y replicable.', items: [
       { t: 'Inclusión', to: '4', fb: 'es la última fase.' }, { t: 'Identificación', to: '1', fb: 'primero se buscan los artículos.' },
@@ -296,9 +308,9 @@
 
   S[14] = { html: function () {
     return '<div class="kick">Módulo 8 · Pantalla 14</div><h1>Caso: decisión de crédito con IA explicable</h1>' +
-      '<div style="display:grid;grid-template-columns:1.1fr 1fr;gap:12px"><div class="card"><div class="act">Contexto (caso ficticio)</div><div class="p" style="font-size:12px"><b>Propósito:</b> aplicar los indicadores en una decisión de negocio. Laura es analista de crédito en una cooperativa financiera colombiana. El modelo (gradient boosting, 92% de precisión) recomienda <b style="color:var(--red)">RECHAZAR</b> el crédito de un emprendedor.</div><div style="font-size:10px;color:var(--muted);margin-top:4px">Caso inspirado en Dikmen y Burns (2022), Assiri (2026) y Humer et al. (2024).</div></div>' +
-      '<div class="card"><div class="act">Explicación SHAP</div><div style="font-size:11.5px;line-height:1.6;font-family:Consolas,monospace">Historial de pagos <span style="color:var(--red)">▮▮</span> −<br>Ingresos variables <span style="color:var(--red)">▮▮</span> −<br>Antigüedad del negocio <span style="color:var(--red)">▮</span> −<br><b>Zona de residencia <span style="color:var(--red)">▮▮▮▮▮</span> −</b></div></div></div>' +
-      '<div class="card" style="margin-top:10px"><div class="act">🧭 Miniactividad · Caso guiado en 3 pasos (6,25 puntos)</div><div id="caso"></div></div>';
+      '<div style="display:grid;grid-template-columns:1.1fr 1fr;gap:12px"><div class="card" data-cue="ctx"><div class="act">Contexto (caso ficticio)</div><div class="p" data-cue="prop" style="font-size:12px"><b>Propósito:</b> aplicar los indicadores en una decisión de negocio. Laura es analista de crédito en una cooperativa financiera colombiana. El modelo (gradient boosting, 92% de precisión) recomienda <b style="color:var(--red)">RECHAZAR</b> el crédito de un emprendedor.</div><div style="font-size:10px;color:var(--muted);margin-top:4px">Caso inspirado en Dikmen y Burns (2022), Assiri (2026) y Humer et al. (2024).</div></div>' +
+      '<div class="card" data-cue="shap"><div class="act">Explicación SHAP</div><div style="font-size:11.5px;line-height:1.6;font-family:Consolas,monospace">Historial de pagos <span style="color:var(--red)">▮▮</span> −<br>Ingresos variables <span style="color:var(--red)">▮▮</span> −<br>Antigüedad del negocio <span style="color:var(--red)">▮</span> −<br><b>Zona de residencia <span style="color:var(--red)">▮▮▮▮▮</span> −</b></div></div></div>' +
+      '<div class="card" data-cue="act" style="margin-top:10px"><div class="act">🧭 Miniactividad · Caso guiado en 3 pasos (6,25 puntos)</div><div id="caso"></div></div>';
   }, init: function () {
     mcSeq($('#caso'), 'm8', [
       { q: '¿Qué debería hacer Laura?', opts: [{ t: '(a) Rechazar: el modelo tiene 92% de precisión', ok: 0, fb: 'Eso es sobreconfianza: obedecer sin mirar la explicación.' }, { t: '(b) Aprobar por intuición', ok: 0, fb: 'Eso es subconfianza: ignorar el modelo sin evidencia.' }, { t: '(c) Revisar la explicación antes de decidir', ok: 1, fb: 'Confianza calibrada: usar el modelo y revisar su explicación.' }] },
@@ -318,8 +330,8 @@
     { m: 'M5 a M7', q: 'Relaciona cada categoría con uno de sus indicadores.', type: 'rel', pairs: [['Técnicos', 'Fidelidad'], ['Cognitivos', 'Conocimiento del dominio'], ['Éticos y de gobernanza', 'Rendición de cuentas'], ['Organizacionales', 'Madurez en IA']], opts: ['Conocimiento del dominio', 'Fidelidad', 'Madurez en IA', 'Rendición de cuentas'], fb: 'Técnicos–Fidelidad · Cognitivos–Conocimiento del dominio · Éticos–Rendición de cuentas · Organizacionales–Madurez en IA.' }
   ];
   var evI = 0;
-  S[15] = { html: function () {
-    return '<div class="kick">Evaluación final · Pantalla 15</div><h1>Comprueba lo aprendido</h1><div class="p" style="font-size:12.5px;margin-bottom:8px">8 preguntas alineadas al REA · cada ítem 6,25 · miniactividades 50 + evaluación 50 = 100 puntos · se aprueba con 70.</div><div class="qnav" id="qnav" style="margin-bottom:8px"></div><div class="card" id="qbox"></div><div style="display:grid;grid-template-columns:1fr 1.4fr;gap:10px;margin-top:8px"><div class="card" id="resbox" style="font-size:12px"></div><div class="card" style="font-size:12px"><b>Sugerencias de repaso</b> por módulo<div id="repaso" style="margin:4px 0"></div><button class="btn" id="verres">Ver resultado</button> <button class="btn2" id="retry">Reintentar</button></div></div>';
+  S[15] = { reserve: 70, html: function () {
+    return '<div class="kick">Evaluación final · Pantalla 15</div><h1>Comprueba lo aprendido</h1><div class="p" style="font-size:12.5px;margin-bottom:8px">8 preguntas alineadas al REA · cada ítem 6,25 · miniactividades 50 + evaluación 50 = 100 puntos · se aprueba con 70.</div><div class="qnav" id="qnav" style="margin-bottom:8px"></div><div class="card" id="qbox" data-cue="q"></div><div style="display:grid;grid-template-columns:1fr 1.4fr;gap:10px;margin-top:8px"><div class="card" id="resbox" data-cue="res" style="font-size:12px"></div><div class="card" data-cue="rep" style="font-size:12px"><b>Sugerencias de repaso</b> por módulo<div id="repaso" style="margin:4px 0"></div><button class="btn" id="verres">Ver resultado</button> <button class="btn2" id="retry">Reintentar</button></div></div>';
   }, init: function () { evI = Math.min(Object.keys(state.ev).length, 7); renderQ(); renderRes(false);
     $('#verres').onclick = function () { renderRes(true); };
     $('#retry').onclick = function () { state.ev = {}; save(); evI = 0; renderQ(); renderRes(false); };
@@ -355,47 +367,86 @@
   S[16] = { html: function () {
     var items = ['¿La explicación es fiel al modelo?', '¿Se adapta a mi rol y la entiendo?', '¿Mi confianza está calibrada?', '¿El modelo es justo y transparente? ¿Hay un responsable?', '¿La organización está preparada (madurez, cultura)?', '¿Cómo mediremos la confianza?'];
     return '<div class="kick">Conclusión · Pantalla 16</div><h1>Antes de confiar en un modelo…</h1>' +
-      '<div class="card hl" style="margin-bottom:10px"><div class="act">🎯 Cumplimiento del REA</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;font-size:11.5px"><div><b>Comprendiste</b> (verbo)</div><div><b>los 31 indicadores de confianza</b> en modelos supervisados explicables · M2–M7</div><div><b>a partir de casos</b> y ejemplos · M5–M8</div><div><b>para decisiones organizacionales</b> en América Latina · M1, M8</div></div><div style="font-size:11px;color:var(--muted);margin-top:4px">Lo evidencias con al menos 70 de 100 puntos. Tu puntaje actual: <b>' + fmt(total()) + '</b>.</div></div>' +
-      '<div style="display:grid;grid-template-columns:1fr 1.15fr;gap:12px"><div class="card"><div class="act">Síntesis</div><div class="p" style="font-size:12.5px">La confianza en un modelo explicable no es un sí o un no: se calibra. Es el puente entre la IA y la decisión.</div><div class="act" style="margin-top:10px">Siguiente paso</div><div class="p" style="font-size:12px">Aplica la lista en tu próximo proyecto de ML.</div></div>' +
-      '<div class="card"><div class="act">☑ Lista de verificación</div><div style="font-size:12.5px;line-height:1.8">' + items.map(function (t, i) { return '<label style="display:block"><input type="checkbox"> ' + t + '</label>'; }).join('') + '</div><a class="btn2" href="assets/docs/lista_verificacion.pdf" download target="_blank" rel="noopener" style="text-decoration:none">⬇ Descargar lista (PDF)</a></div></div>';
+      '<div class="card hl" data-cue="rea" style="margin-bottom:10px"><div class="act">🎯 Cumplimiento del REA</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;font-size:11.5px"><div><b>Comprendiste</b> (verbo)</div><div><b>los 31 indicadores de confianza</b> en modelos supervisados explicables · M2–M7</div><div><b>a partir de casos</b> y ejemplos · M5–M8</div><div><b>para decisiones organizacionales</b> en América Latina · M1, M8</div></div><div style="font-size:11px;color:var(--muted);margin-top:4px">Lo evidencias con al menos 70 de 100 puntos. Tu puntaje actual: <b>' + fmt(total()) + '</b>.</div></div>' +
+      '<div style="display:grid;grid-template-columns:1fr 1.15fr;gap:12px"><div class="card" data-cue="sint" style="display:flex;flex-direction:column"><div class="act">Síntesis</div><div class="p" style="font-size:12.5px">La confianza en un modelo explicable no es un sí o un no: se calibra. Es el puente entre la IA y la decisión.</div><div class="act" style="margin-top:10px">Siguiente paso</div><div class="p" data-cue="paso" style="font-size:12px">Aplica la lista en tu próximo proyecto de ML.</div><div class="sintviz">' + ODC_ICON('gauge', 'bigico') + '</div></div>' +
+      '<div class="card" data-cue="lista"><div class="act">☑ Lista de verificación</div><div style="font-size:12.5px;line-height:1.8">' + items.map(function (t, i) { return '<label style="display:block"><input type="checkbox"> ' + t + '</label>'; }).join('') + '</div><a class="btn2" href="assets/docs/lista_verificacion.pdf" download target="_blank" rel="noopener" style="text-decoration:none">⬇ Descargar lista (PDF)</a></div></div>';
   } };
 
-  S[17] = { full: true, html: function () {
+  S[17] = { full: true, nofit: true, html: function () {
     return '<div class="kick">Pantalla 17</div><h1>Referencias (APA 7)</h1><div class="card refs" style="column-count:2;column-gap:22px">' + D.refs.map(function (r) { return '<p>' + esc(r).replace(/(https?:\/\/[^\s]+?)(?=[.,]?(\s|$))/g, '<a href="$1" target="_blank" rel="noopener">$1</a>') + '</p>'; }).join('') + '</div>';
   } };
   S[18] = { full: true, html: function () {
     return '<div class="kick">Pantalla 18</div><h1>Créditos y licencia</h1><div style="display:grid;grid-template-columns:1.25fr 1fr;gap:14px"><div class="card"><div class="act">Metadatos</div>' + D.meta.map(function (m) { return '<p style="font-size:12.5px;margin-bottom:5px"><b>' + m[0] + ':</b> ' + esc(m[1] || '') + '</p>'; }).join('') + '</div>' +
-      '<div><div class="card"><div class="act">Créditos de recursos (título, autor, fuente, licencia)</div><ul style="font-size:12px;line-height:1.5;padding-left:16px"><li>Avatar «Vera» e ilustraciones · Open Peeps · Pablo Stanley · <a href="https://www.openpeeps.com/" target="_blank" rel="noopener">openpeeps.com</a> (generado con react-peeps, MIT) · CC0</li><li>Voz «daniela» · modelo Piper (Hansen, 2023) entrenado con OpenSLR 61 (Guevara-Rukoz et al., 2020) · CC BY-SA 4.0</li><li>Diagrama PRISMA, íconos y diseño · autores · elaboración propia · CC BY-SA 4.0</li><li>Cifras del Módulo 1 · Gillespie et al. (2025) · Univ. de Melbourne y KPMG · citadas en APA</li></ul></div>' +
-      '<div class="card" style="margin-top:10px;display:flex;gap:12px;align-items:center"><a href="https://creativecommons.org/licenses/by-sa/4.0/deed.es" target="_blank" rel="noopener"><img src="assets/img/cc-by-sa.png" alt="Licencia Creative Commons Atribución-CompartirIgual 4.0" width="88" height="31"></a><div style="font-size:12px">Esta obra está bajo una licencia <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.es" target="_blank" rel="noopener">Creative Commons Atribución-CompartirIgual 4.0 Internacional</a>. Voz sintética generada con IA (Piper TTS).</div></div></div></div>';
+      '<div><div class="card"><div class="act">Créditos de recursos (título, autor, fuente, licencia)</div><ul style="font-size:12px;line-height:1.5;padding-left:16px"><li>Avatar «Vera» · imagen generada con IA (Higgsfield / Z-Image) por los autores · animada con SadTalker (Zhang et al., 2023; Apache 2.0) · CC BY-SA 4.0</li><li>Ilustración de la pantalla 4 e íconos de los indicadores · autores · elaboración propia · CC BY-SA 4.0</li><li>Mapa de América Latina · contornos de Natural Earth · <a href="https://www.naturalearthdata.com/" target="_blank" rel="noopener">naturalearthdata.com</a> · dominio público</li><li>Voz «daniela» · modelo Piper (Hansen, 2023) entrenado con OpenSLR 61 (Guevara-Rukoz et al., 2020) · CC BY-SA 4.0</li><li>Diagrama PRISMA, íconos y diseño · autores · elaboración propia · CC BY-SA 4.0</li><li>Logo · imagotipo oficial de la Universidad de Cundinamarca, usado según su manual de imagen · marca institucional, no cubierta por la licencia CC</li><li>Cifras del Módulo 1 · Gillespie et al. (2025) · Univ. de Melbourne y KPMG · citadas en APA</li></ul></div>' +
+      '<div class="card" style="margin-top:10px;display:flex;gap:12px;align-items:center"><a href="https://creativecommons.org/licenses/by-sa/4.0/deed.es" target="_blank" rel="noopener"><img src="assets/img/cc-by-sa.png" alt="Licencia Creative Commons Atribución-CompartirIgual 4.0" width="88" height="31"></a><div style="font-size:12px">Esta obra está bajo una licencia <a href="https://creativecommons.org/licenses/by-sa/4.0/deed.es" target="_blank" rel="noopener">Creative Commons Atribución-CompartirIgual 4.0 Internacional</a>. Voz sintética generada con IA (Piper TTS).</div></div><p style="font-size:11px;color:var(--muted);margin-top:8px">Universidad de Cundinamarca · <a href="https://www.ucundinamarca.edu.co" target="_blank" rel="noopener">www.ucundinamarca.edu.co</a> · Vigilada MinEducación</p></div></div>';
   } };
 
-  /* ---------------- audio + avatar ---------------- */
-  var audio = $('#audio'), raf = null, blinkT = 0;
-  function setFace(f) { $('#veraRest').classList.toggle('hide', f !== 'rest'); $('#veraTalk').classList.toggle('hide', f !== 'talk'); $('#veraBlink').classList.toggle('hide', f !== 'blink'); }
-  function tick() {
-    var env = D.env[state.cur], now = Date.now();
-    if (!audio.paused && env) { var v = +env.charAt(Math.floor(audio.currentTime * 20)) || 0; setFace(v >= 3 && (Math.floor(audio.currentTime * 8) % 2 === 0 || v >= 6) ? 'talk' : 'rest'); }
-    else if (now - blinkT > 3800) { setFace('blink'); if (now - blinkT > 3950) { blinkT = now; setFace('rest'); } }
-    raf = requestAnimationFrame(tick);
+  /* ---------------- avatar video + synced cues ---------------- */
+  var audio = $('#audio'), raf = null, cueIdx = 0, cueOffT = 0;
+  ['play', 'pause', 'ended'].forEach(function (ev) { audio.addEventListener(ev, function () { $('#avatar').classList.toggle('talking', !audio.paused && !audio.ended); }); });
+  function clearCue() { $$('.cue-on').forEach(function (e) { e.classList.remove('cue-on'); }); $('#cueLayer').classList.remove('on'); }
+  function pointTo(el) {
+    var st = $('#stage').getBoundingClientRect(), sc = st.width / 1280, r = el.getBoundingClientRect(), av = $('.avcard').getBoundingClientRect();
+    if (r.width > 420 && document.createRange) { try { var rg = document.createRange(); rg.selectNodeContents(el); var rr = rg.getBoundingClientRect(); if (rr.width > 10 && rr.width < r.width) r = { left: rr.left, right: rr.right, top: r.top, bottom: r.bottom, width: rr.width, height: r.height }; } catch (e) {} }
+    var x0 = (av.left - st.left) / sc + 4, y0 = (av.top - st.top) / sc + 120;
+    var x1 = (r.right - st.left) / sc + 6, y1 = (r.top - st.top) / sc + r.height / sc / 2;
+    if (x1 > x0 - 20) { x1 = (r.left - st.left) / sc + r.width / sc / 2; y1 = (r.bottom - st.top) / sc + 6; }
+    var mx = (x0 + x1) / 2, my = Math.min(y0, y1) - 40;
+    $('#cuePath').setAttribute('d', 'M' + x0 + ',' + y0 + ' Q' + mx + ',' + my + ' ' + x1 + ',' + y1);
+    $('#cueLayer').classList.add('on');
   }
-  function playBtn() { $('#btnPlay').textContent = audio.paused ? '▶' : '⏸'; $('#btnPlay').setAttribute('aria-label', audio.paused ? 'Reproducir audio' : 'Pausar audio'); }
-  audio.addEventListener('play', playBtn); audio.addEventListener('pause', playBtn); audio.addEventListener('ended', function () { playBtn(); setFace('rest'); });
+  function cueTick() {
+    var cues = (D.cues || {})[state.cur] || [], t = audio.currentTime, now = Date.now();
+    if (cueOffT && now > cueOffT) { clearCue(); cueOffT = 0; }
+    while (cueIdx < cues.length && t >= cues[cueIdx][0]) {
+      var cq = cues[cueIdx][1], el = cq.charAt(0) === '#' ? document.querySelector(cq) : $('#main [data-cue="' + cq + '"]');
+      if (el && !audio.paused) { clearCue(); if (el.scrollIntoView) el.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); el.classList.add('cue-on'); el.classList.toggle('cue-wide', el.offsetWidth > 420); pointTo(el); cueOffT = now + 2600; }
+      cueIdx++;
+    }
+  }
+  function tick() { if (!audio.paused) cueTick(); raf = requestAnimationFrame(tick); }
+  audio.addEventListener('seeked', function () { var cues = (D.cues || {})[state.cur] || []; cueIdx = 0; while (cueIdx < cues.length && cues[cueIdx][0] < audio.currentTime) cueIdx++; clearCue(); });
+  function playBtn() { $('#btnPlay').textContent = audio.paused ? '▶' : '⏸'; $('#btnPlay').setAttribute('aria-label', audio.paused ? 'Reproducir a Vera' : 'Pausar a Vera'); }
+  audio.addEventListener('play', playBtn); audio.addEventListener('pause', playBtn); audio.addEventListener('ended', function () { playBtn(); clearCue(); });
 
   /* ---------------- navigation ---------------- */
+  /* escala el contenido de la pantalla para ocupar todo el alto disponible (sin cambiar el texto) */
+  function fitMain(sc) {
+    var main = $('#main'), w = $('.fitwrap', main);
+    if (!w) return;
+    w.style.zoom = ''; w.style.width = '';
+    if (sc.nofit || !('zoom' in w.style)) return;
+    var reserve = sc.reserve || ($('.fbbox, #vf, #caso, #mc6', main) ? 46 : 6);
+    w.style.minHeight = '0';
+    var mr = main.getBoundingClientRect(), k = mr.height / main.clientHeight, avail = mr.height - reserve * k;
+    function h() { return w.getBoundingClientRect().height; }
+    if (h() > avail) { w.style.minHeight = ''; return; }
+    var lo = 1, hi = sc.maxZoom || 1.45;
+    for (var i = 0; i < 9; i++) {
+      var mid = (lo + hi) / 2; w.style.zoom = mid;
+      if (h() <= avail) lo = mid; else hi = mid;
+    }
+    w.style.zoom = lo; w.style.minHeight = '';
+  }
   function go(n) {
     if (n < 1 || n > TOTAL) return;
     state.cur = n; if (state.visited.indexOf(n) < 0) state.visited.push(n);
     var sc = S[n], main = $('#main');
-    main.innerHTML = sc.html(); main.classList.toggle('full', !!sc.full); $('#avatar').classList.toggle('hide', !!sc.full);
+    main.innerHTML = '<div class="fitwrap">' + sc.html() + '</div>'; main.classList.toggle('full', !!sc.full); $('#avatar').classList.toggle('hide', !!sc.full);
     main.scrollTop = 0;
     $$('[data-info]', main).forEach(function (b) { b.onclick = function () { var x = INFO[b.dataset.info]; modal(x[0], x[1]); }; });
     if (sc.init) sc.init();
+    main.classList.remove('enter'); void main.offsetWidth;
+    var kids = main.querySelectorAll('.fitwrap > *, .icard, .stat, .menu-grid > .card');
+    for (var k = 0; k < kids.length; k++) kids[k].style.setProperty('--i', Math.min(k, 10));
+    fitMain(sc);
+    main.classList.add('enter');
     $('#prog').textContent = 'Pantalla ' + pad(n) + ' / ' + TOTAL + ' · ' + TITLES[n];
-    $('#dots').innerHTML = Array.apply(null, Array(TOTAL)).map(function (x, i) { return '<i class="' + (i < n ? 'on' : '') + '"></i>'; }).join('');
+    $('#dots').innerHTML = Array.apply(null, Array(TOTAL)).map(function (x, i) { return '<i class="' + (i === n - 1 ? 'now' : i < n ? 'on' : '') + '"></i>'; }).join('');
     $('#btnPrev').disabled = n === 1; $('#btnNext').disabled = n === TOTAL;
-    audio.pause();
+    audio.pause(); clearCue(); cueIdx = 0; cueOffT = 0;
     if (!sc.full) {
-      audio.src = 'assets/audio/p' + pad(n) + '.mp3';
+      audio.src = 'assets/video/p' + pad(n) + '.mp4';
       $('#transcript').textContent = 'Transcripción · ' + D.scripts[n];
       if (userInteracted) { var p = audio.play(); if (p && p.catch) p.catch(function () {}); }
     }
@@ -419,7 +470,7 @@
     $('#btnHelp').onclick = function () { modal('Ayuda', HELP); };
     $('#modalClose').onclick = closeModal; $('#modal').addEventListener('click', function (e) { if (e.target.id === 'modal') closeModal(); });
     $('#btnPlay').onclick = function () { if (audio.paused) audio.play(); else audio.pause(); };
-    $('#btnRestart').onclick = function () { audio.currentTime = 0; audio.play(); };
+    $('#btnRestart').onclick = function () { audio.currentTime = 0; cueIdx = 0; audio.play(); };
     $('#vol').oninput = function () { audio.volume = +this.value; }; audio.volume = 0.9;
     $('#btnCC').onclick = function () { var t = $('#transcript'), on = t.classList.toggle('hide'); this.setAttribute('aria-pressed', String(!on)); };
     window.ODC = { go: go };
