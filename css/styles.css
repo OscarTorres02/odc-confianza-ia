@@ -196,3 +196,45 @@ select:focus{border-color:var(--teal);box-shadow:0 0 0 3px rgba(14,159,142,.18);
 #rea.grow .row[data-cue="slots"] > button{align-self:flex-end}
 .sintviz{margin-top:auto;display:flex;justify-content:center;color:var(--teal);opacity:.9}
 .sintviz .bigico{width:110px;height:110px}
+
+/* ---- Módulos 5–7: una pantalla con desplazamiento vertical (storyboard) ---- */
+.fitwrap:has(.modscroll){height:100%;min-height:0}
+.modscroll{flex:1 1 auto;min-height:0;overflow-y:scroll;padding:2px 10px 8px 2px;scrollbar-width:auto;scrollbar-color:var(--teal) var(--teal-l)}
+.modscroll::-webkit-scrollbar{width:12px}
+.modscroll::-webkit-scrollbar-track{background:var(--teal-l);border-radius:8px}
+.modscroll::-webkit-scrollbar-thumb{background:var(--teal);border-radius:8px;border:2px solid var(--teal-l)}
+.modscroll:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.main:has(.modscroll){overflow:hidden}
+.catblk{margin-bottom:12px;border-radius:10px;padding:4px}
+.cathead{position:relative;display:inline-flex;align-items:baseline;gap:8px;font-size:14px;color:var(--navy);margin:2px 0 7px;cursor:help;border-bottom:2px dotted var(--teal);outline:none}
+.cathead .cath{font-size:11.5px;color:var(--muted);font-weight:600}
+.cathead .catpop{position:absolute;left:0;top:calc(100% + 6px);width:420px;z-index:6;background:#fff;border:1.5px solid var(--teal);border-radius:10px;padding:8px 11px;font-size:11.5px;font-weight:400;color:var(--ink,#1d2b24);box-shadow:var(--shadow-up);opacity:0;visibility:hidden;transform:translateY(-4px);transition:opacity .2s,transform .2s,visibility .2s}
+.cathead:hover .catpop,.cathead:focus .catpop{opacity:1;visibility:visible;transform:none}
+.flipgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.flip{position:relative;height:150px;border:0;padding:0;background:none;cursor:pointer;perspective:900px;font:inherit;text-align:left}
+.flip .fin{position:absolute;inset:0;transition:transform .5s var(--ease);transform-style:preserve-3d;display:block}
+.flip.on .fin{transform:rotateY(180deg)}
+.flip .ff,.flip .fb2{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:10px;border:1.5px solid var(--line);border-top:4px solid var(--teal);background:var(--card);box-shadow:var(--shadow);display:flex;flex-direction:column;padding:8px}
+.flip .ff{align-items:center;justify-content:center;text-align:center;gap:6px}
+.flip .ff .ico{width:38px;height:38px;padding:6px;border-radius:10px;background:var(--teal-l);color:var(--teal-d)}
+.flip .ff b{font-size:11.5px;color:var(--navy);line-height:1.25}
+.flip .ff small{font-size:9.5px;color:var(--muted)}
+.flip .fb2{transform:rotateY(180deg);gap:4px;font-size:10px;line-height:1.3;overflow:auto;background:var(--teal-l)}
+.flip .fb2 em{font-size:9px;color:var(--muted);margin-top:auto}
+.flip:hover .ff{box-shadow:var(--shadow-up)}
+.flip:focus-visible{outline:3px solid var(--gold);outline-offset:2px;border-radius:10px}
+@media (prefers-reduced-motion:reduce){.flip .fin{transition:none}}
+
+/* ---- Apariciones de íconos junto a Vera ---- */
+.pop{position:absolute;right:12px;top:auto;bottom:58px;width:96px;height:96px;z-index:5;pointer-events:none;border-radius:50%;background:radial-gradient(circle at 50% 45%,#fff 0 58%,rgba(255,255,255,.0) 72%);display:flex;align-items:center;justify-content:center;opacity:0;transform:scale(.4) translateY(10px)}
+.pop img{width:84px;height:84px;object-fit:contain;filter:drop-shadow(0 4px 6px rgba(0,72,43,.25))}
+.pop.on{animation:popin 3.2s var(--ease) both}
+@keyframes popin{0%{opacity:0;transform:scale(.4) translateY(10px)}12%{opacity:1;transform:scale(1.08)}20%{transform:scale(1)}82%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(.85) translateY(-8px)}}
+@media (prefers-reduced-motion:reduce){.pop.on{animation:popfade 3.2s linear both}@keyframes popfade{0%,100%{opacity:0}10%,85%{opacity:1;transform:none}}}
+.pop.left{right:auto;left:12px}
+/* Tooltips de tarjetas: siempre por encima de lo que sigue (p. ej. ejemplo de la app de navegación) */
+.tip:hover,.tip:focus,.tip:focus-within{z-index:30}
+:has(> .tip:hover),:has(> .tip:focus),:has(> .tip:focus-within){position:relative;z-index:30}
+.tip .tiptext{z-index:31;box-shadow:0 6px 18px rgba(0,0,0,.25)}
+.cathead:hover,.cathead:focus{z-index:30}
+:has(> .cathead:hover),:has(> .cathead:focus){position:relative;z-index:30}

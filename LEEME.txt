@@ -1,0 +1,23 @@
+¿Se puede confiar en la IA? · ODC (paquete SCORM 1.2)
+Universidad de Cundinamarca · Especialización en Analítica y Ciencia de Datos · 2026
+Autores: Oscar Manuel Torres Maldonado · María Lucía Torres Maldonado
+Licencia: CC BY-SA 4.0
+
+CÓMO USARLO
+
+1) En Moodle (u otro LMS compatible con SCORM 1.2)
+   - Agregar actividad o recurso > Paquete SCORM.
+   - Subir este archivo .zip tal cual, sin descomprimirlo.
+   - El LMS registra el avance y la calificación (de 0 a 100; se aprueba con 70).
+
+2) Sin plataforma, en cualquier computador
+   - Descomprimir el .zip en una carpeta.
+   - Abrir index.html con un navegador (Chrome, Edge o Firefox).
+   - Funciona sin internet. El avance se guarda en el navegador.
+
+3) En la web (por ejemplo, GitHub Pages)
+   - Subir el contenido de la carpeta descomprimida a un repositorio y publicarlo.
+   - index.html es la página de inicio.
+
+Contenido: index.html (inicio), imsmanifest.xml (manifiesto SCORM), css/, js/,
+assets/ (videos del avatar Vera, íconos, imágenes y la lista de verificación en PDF).

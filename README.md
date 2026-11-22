@@ -6,7 +6,7 @@ Objeto Digital de Conocimiento (ODC) · Especialización en Analítica y Ciencia
 
 - Autores: Oscar Manuel Torres Maldonado · María Lucía Torres Maldonado
 - Tutor: Darwin Andrés Díaz Gómez
-- 18 pantallas · 8 módulos · 8 miniactividades + evaluación final (100 puntos, se aprueba con 70)
+- 15 pantallas · 8 miniactividades + evaluación final (100 puntos, se aprueba con 70)
 
 ## Cómo verlo
 - **En línea:** https://oscartorres02.github.io/odc-confianza-ia/
@@ -15,4 +15,4 @@ Objeto Digital de Conocimiento (ODC) · Especialización en Analítica y Ciencia
 
 ## Licencia
 Creative Commons Atribución-CompartirIgual 4.0 Internacional (CC BY-SA 4.0).
-Avatar «Vera» generado con IA y animado con SadTalker. Voz sintética: Piper TTS, voz «daniela» (OpenSLR 61, CC BY-SA 4.0). Mapa con contornos de Natural Earth (dominio público). El logo de la Universidad de Cundinamarca es marca institucional y no está cubierto por la licencia CC.
+Avatar «Vera» generado con IA y animado con Seedance 2.5; voz «Helena» (ElevenLabs) vía Higgsfield, audios publicados por los autores bajo CC BY-SA 4.0. Íconos generados con IA (elaboración propia). Mapa con contornos de Natural Earth (dominio público). El logo de la Universidad de Cundinamarca es marca institucional y no está cubierto por la licencia CC.
